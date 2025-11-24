@@ -1,12 +1,22 @@
 import axios from 'axios'
+import axiosRetry from 'axios-retry'
 
-const API_BASE_URL = 'https://mixo-fe-backend-task.vercel.app'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://mixo-fe-backend-task.vercel.app'
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30000, // 30 seconds for slow API
   headers: {
     'Content-Type': 'application/json',
+  },
+})
+
+// Configure retry logic
+axiosRetry(apiClient, {
+  retries: 3,
+  retryDelay: axiosRetry.exponentialDelay,
+  retryCondition: (error) => {
+    return axiosRetry.isNetworkOrIdempotentRequestError(error) || error.response?.status === 429
   },
 })
 
